@@ -1,6 +1,8 @@
 # Chi-Crime
 Chicago crime data front-end visualization solution
 
+![Alt text](/chi-crime-screenshot.png?raw=true)
+
 Stack:
 - Socrata Chicago Crime Data API: https://dev.socrata.com/foundry/data.cityofchicago.org/6zsd-86xi
 - jQuery: https://jquery.com/
