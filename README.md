@@ -1,5 +1,5 @@
 # Chi-Crime
-Chicago crime data front-end visualization solution
+Chicago crime data front-end visualization solution  
 *Developed during summer 2015 during sophomore summer of college*
 
 ![Alt text](/chi-crime-screenshot.png?raw=true)
