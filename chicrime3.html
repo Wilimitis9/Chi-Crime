@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+    <!--HEADER-->
+    <head>
+        <!--Google Maps-->
+        <script src="http://maps.googleapis.com/maps/api/js"></script>
+        <!--jQuery-->
+        <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+        <!--Bootstrap JavaScript-->
+        <script src="bootstrap-3.3.5-dist/bootstrap-3.3.5-dist/js/bootstrap.min.js"></script>
+        <!--Bootstrap CSS-->
+        <link rel="stylesheet" href="bootstrap-3.3.5-dist/bootstrap-3.3.5-dist/css/bootstrap.css">
+        <!--Custom CSS-->
+        <link rel="stylesheet" href="chicrime-custom.css">
+        <!--Custom Data JS-->
+        <script src="chicrime-data.js"></script>
+        <!--Custom Interface JS-->
+        <script src="chicrime-interface.js"></script>
+        <!--Google Maps Distance b/w Two Points-->
+        <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=geometry"></script>
+        <!--Autocomplete library-->
+        <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?libraries=places"></script>
+    </head>
+    
+    <!--BODY-->
+    <body>
+        
+        <!--PAGE CONTAINER-->
+        <div id="page-container" class="container-fluid">
+            
+            <!--HEADER-->
+            <div id="header">
+                <h1><center>ChiCrime</center></h1>
+                <p><center>You are viewing the most recent 1,000 crimes from the Chicago Police Department.
+                    <br>Apply filters to sort the crimes by type, time, and location. Click/hover over the markers to view details.
+                    <br>By Luke Wilimitis 2015 - using Publicly Available Data</center></p>
+            </div>
+            
+            <!--GOOGLE MAP-->
+            <div id="map-case" class="col-sm-12 col-md-12">
+                <div id="map-background">
+                    <div id="google-map" ></div>
+                </div>
+            </div>
+            
+            <!--MAIN MENU-->
+            <div id="main-menu-case" class="col-sm-12 col-md-12">
+                <div id="main-menu">
+                    <div id="buttons">
+                        <button id="types-menu-button" onclick="typesMenuClicked(this)" class="btn btn-info btn-lg menu-button active">type</button>
+                        <button id="time-frame-menu-button" onclick="timeframeMenuClicked(this)" class="btn btn-info btn-lg menu-button">time</button>
+                        <button id="location-menu-button" onClick="locationMenuClicked(this)" class="btn btn-info btn-lg menu-button">location</button>
+                        <button id="routes-menu-button" onClick="routesMenuClicked(this)" class="btn btn-info btn-lg menu-button">routes</button>
+                        <button id="tweets-menu-button" onClick="tweetsMenuClicked(this)" class="btn btn-info btn-lg menu-button">tweets</button>
+                        <button id="reset-all-button" onClick="resetAll(this)" class="btn btn-success btn-lg menu-button">reset all</button>
+                    </div>
+                </div>
+            </div>    
+            
+            <!--INTERFACE-->
+            <div id="interface" class="col-sm-12 col-md-12">
+                <!--jQuery dynamically generates interfaces here-->
+                    
+                <div id="type-header" class="panel panel-info filter-header">
+                    <div class="panel-heading">
+                        <h1>Type Filters</h1>
+                    </div>
+                    <div class="panel-body">
+                        <h4>Press one or more buttons to show crime data from only the selected types!</h4>
+                    </div>
+                </div>
+                <div id="type-buttons"></div>
+                
+            </div>
+            
+        </div>
+    </body>
+</html>
+
+<script>
+    // Function to intitialize the map
+    function initialize() {
+
+        // Place map with center and zoom
+        var mapProp = {
+            center: new google.maps.LatLng(41.881832, -87.678194),
+            zoom: 12,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        map = new google.maps.Map(document.getElementById("google-map"),mapProp);
+
+        // Place markers at crime locations
+        for (var i = 0; i < json.length; i++) {
+
+            // Error check for no location data
+            if (json[i].location == null)
+                continue;
+
+            // Push type of crime onto set of primary crime types
+            if (crimeTypes.indexOf(json[i].primary_type) == -1)
+                crimeTypes.push(json[i].primary_type);
+
+            // Get index of crime to use for icon
+            var typeIndex = crimeTypes.indexOf(json[i].primary_type);
+
+            // Create new marker
+            var newMarker = new google.maps.Marker({
+                //icon: 'blueicons/number_' + typeIndex + '.png', 
+                position: new google.maps.LatLng(json[i].location.coordinates[1], json[i].location.coordinates[0])}
+            );
+            newMarker.crimeData = json[i]; // Append crime data object onto the marker
+            
+            // Append tag data to marker for filtering
+            newMarker.p_tag = 0; // primary_type
+            newMarker.t_tag = 0; // time frame
+            newMarker.d_tag = 0; // date frame
+            newMarker.l_tag = 0; // location radius
+            newMarker.r_tag = 0; // within route range
+
+            // Push onto traceable set of markers
+            markers.push(newMarker);
+
+            // Set on map
+            newMarker.setMap(map);
+
+            // Install 'hover' listener by using a mouseover and mouseout listener
+            google.maps.event.addListener(newMarker, 'mouseover', function(event) {
+                crimeInfoWindow(this);   
+            });
+            google.maps.event.addListener(newMarker, 'mouseout', function(event) {
+                lastOpen.close(); // Close the marker that was last open
+            });
+        }
+    }
+
+    // Function to display windows on hover over the markers
+    function crimeInfoWindow(marker) {
+        var infowindow = new google.maps.InfoWindow({
+            content: 'Crime: ' + marker.crimeData.primary_type +
+                    '<br>Descrip: ' + marker.crimeData.description +
+                    '<br>Location: ' + marker.crimeData.location_description +
+                    '<br>Date: ' + marker.crimeData.date +
+                    '<br>Community: ' + marker.crimeData.community_area +
+                    '<br>Latitude: ' + marker.crimeData.location.coordinates[1] +
+                    '<br>Longitude: ' + marker.crimeData.location.coordinates[0]
+        });
+        infowindow.open(map, marker); // Open the window
+        lastOpen = infowindow; // Keep track of this one as the last open
+    }
+</script>
+
+<script>
+    var map;                            // reference to google map
+    var lastOpen;                       // reference to last open marker window
+    var markers = [];                   // collection of all crime markers
+    var crimeTypes = [];                // collection of all crime primary types
+    var primaryFilters = [];            // collection of primary filters applied
+    var lastDown = document.getElementById("types-menu-button"); // reference to last open menu tab
+    var requestURL = "https://data.cityofchicago.org/resource/6zsd-86xi.json?$where=year = 2015&$limit=1000";
+    var json = pullSocrata(requestURL);
+    var locationMarked = 0;
+    var locationMarker = null;
+    var circle = null;
+    google.maps.event.addDomListener(window, 'load', initialize());
+    crimeTypes.sort();
+    setMarkerIcons(markers, crimeTypes);
+    appendTypeButtons();
+    var directionsService;
+    var directionsDisplay;
+    var autocomplete_orig;
+    var autocomplete_dest;
+    
+    // Get a directions service
+    directionsService = new google.maps.DirectionsService();
+    
+    // Get a directions renderer
+    var rendererOptions = {
+        map: map,
+        draggable: true
+    }
+    
+    directionsDisplay = new google.maps.DirectionsRenderer(rendererOptions);
+    
+    google.maps.event.addListener(directionsDisplay, 'directions_changed', function() {
+        routeChanged(directionsDisplay.getDirections());
+    });
+</script>

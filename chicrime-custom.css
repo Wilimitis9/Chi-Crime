@@ -1,0 +1,168 @@
+html, body {
+    background: url(wood.jpg);  
+}
+
+#page-container {
+    padding-top: 1em;
+}
+
+#header {
+    width: 59%;
+    margin-left: auto;
+    margin-right: auto;
+    border: 1px solid #fff;
+    border-radius: 10px;
+    color: aliceblue;
+}
+
+#title {
+    font-size: 4em;
+}
+
+#map-case {
+    padding-top: 1em;
+}
+
+#map-background {
+    width: 70%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 1em;
+    padding-bottom: 1em;
+    background: #000A1A;
+    border: 1px solid #fff;
+    border-radius: 10px;
+}
+
+#google-map {
+    height: 40em;
+    width: 97%;
+    margin-left: auto;
+    margin-right: auto;
+    background: #466;
+    border-radius: 10px;
+    border: 1px solid #fff;
+}
+
+#main-menu-case {
+    padding-top: 1em;
+}
+
+#main-menu {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    padding-top: .5em;
+    padding-bottom: .5em;
+    border-radius: 10px;
+}
+
+#interface {
+    padding-top: 1em;
+}
+
+.menu-button {
+    width: 8em;
+    border: 1px solid white;
+    margin-top: .3em;
+}
+
+.filter-header {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    width: 60%;
+}
+
+#type-buttons {
+    text-align: center;
+}
+
+.type-button {
+    width: 20em;
+    text-align: left;
+    padding-left: 2em;
+    margin-bottom: .3em;
+}
+
+#hours-form {
+    text-align: center;
+    color: #fff;
+}
+
+#date-form {
+    text-align: center;
+    color: #fff;
+}
+
+.timeframe-well {
+    width: 35%;
+    margin-left: auto;
+    margin-right: auto;
+    background: #D9EDF7;
+    color: #31708F;
+}
+
+.time-frame-button {
+    margin-right: 1em;
+    margin-left: 1em;
+}
+
+#location-form {
+    text-align: center;
+    color: #fff;
+}
+
+.location-well {
+    width: 35%;
+    margin-left: auto;
+    margin-right: auto;
+    background: #D9EDF7;
+    color: #31708F;
+}
+
+.location-button {
+    margin-right: 1em;
+    margin-left: 1em;
+}
+
+#directions-form {
+    text-align: center;
+    color: #FFF;
+}
+
+#details {
+    color: white;
+    text-align: center;
+}
+
+#origin {
+    width: 25em;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 1em;
+    text-align: center;
+    color: #000;
+}
+
+#destination {
+    width: 25em;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 1em;
+    text-align: center;
+    color: #000;
+}
+
+.label-center {
+    text-align: center;
+    display: block;
+    color: #FFF;
+}
+
+.route-button {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    margin-right: 1em;
+    margin-left: 1em;
+}

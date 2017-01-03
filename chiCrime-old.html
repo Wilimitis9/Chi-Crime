@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+    
+<head>
+
+<!--Google Maps-->
+<script src="http://maps.googleapis.com/maps/api/js"></script>
+<!--jQuery-->
+<script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+<!--Bootstrap JavaScript-->
+<script src="bootstrap-3.3.5-dist/bootstrap-3.3.5-dist/js/bootstrap.min.js"></script>
+<!--Bootstrap CSS-->
+<link rel="stylesheet" href="bootstrap-3.3.5-dist/bootstrap-3.3.5-dist/css/bootstrap.css">
+    
+<script>
+    
+    ///////////////////////////////
+    // Get JSON from Chicago API //
+    ///////////////////////////////
+    var chiAPI = "https://data.cityofchicago.org/resource/6zsd-86xi.json?$where=year = 2015&$limit=100";
+    var json = (function () {
+        var json = null;
+        $.ajax({
+            'async': false,
+            'global': false,
+            'url': chiAPI,
+            'dataType': "json",
+            'success': function (data) {
+                json = data;
+            }
+        });
+        return json;
+    })();
+    
+    //////////////////////////////
+    // Load the Google Maps API //
+    //////////////////////////////
+    var map; // Keep track of map
+    var lastOpen; // Keep track of last one open
+    var markers = []; // Keep track of markers
+    var crimeTypes = []; // Keep track of crime types
+    
+    function initialize() {
+        
+        // Place map with center and zoom
+        var mapProp = {
+            center: new google.maps.LatLng(41.881832, -87.623177),
+            zoom: 12,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        map = new google.maps.Map(document.getElementById("googleMap"),mapProp);
+        
+        // Place markers at crime locations
+        for (var i = 0; i < json.length; i++) {
+        
+            // Error check for no location data
+            if (json[i].location == null)
+                continue;
+            
+            // Push type of crime onto set of primary crime types
+            if (crimeTypes.indexOf(json[i].primary_type) == -1)
+                crimeTypes.push(json[i].primary_type);
+            
+            // Get index of crime to use for icon
+            var typeIndex = crimeTypes.indexOf(json[i].primary_type);
+            
+            // Create new marker
+            var newMarker = new google.maps.Marker({
+                icon: 'purpleIcons/number_' + typeIndex + '.png', 
+                position: new google.maps.LatLng(json[i].location.coordinates[1], json[i].location.coordinates[0])}
+            );
+            newMarker.crimeData = json[i]; // Append crime data object onto the marker
+            
+            // Push onto traceable set of markers
+            markers.push(newMarker);
+            
+            // Set on map
+            newMarker.setMap(map);
+            
+            // Install 'hover' listener by using a mouseover and mouseout listener
+            google.maps.event.addListener(newMarker, 'mouseover', function(event) {
+                crimeInfoWindow(this);   
+            });
+            google.maps.event.addListener(newMarker, 'mouseout', function(event) {
+                lastOpen.close(); // Close the marker that was last open
+            });
+        }
+    }
+    
+    //////////////////////////////////////
+    // Create new window for crime data //
+    //////////////////////////////////////
+    function crimeInfoWindow(marker) {
+        var infowindow = new google.maps.InfoWindow({
+            content: 'Crime: ' + marker.crimeData.primary_type +
+                    '<br>Location: ' + marker.crimeData.location_description +
+                    '<br>Date: ' + marker.crimeData.date +
+                    '<br>Community: ' + marker.crimeData.community_area
+        });
+        infowindow.open(map, marker); // Open the window
+        lastOpen = infowindow; // Keep track of this one as the last open
+    }
+    
+    ////////////////////////////////
+    // Load upon setup completion //
+    ////////////////////////////////
+    google.maps.event.addDomListener(window, 'load', initialize);
+    
+    ///////////////////////////////////////
+    // Change button background on click //
+    ///////////////////////////////////////
+    var lastDown = null;
+    
+    function buttonSelected(button) {
+        
+        if (lastDown != null)
+            $(lastDown).toggleClass("active");
+        
+        $(button).toggleClass("active");
+        
+        lastDown = button;
+    }
+    
+    ///////////////////////////
+    // Open the filters menu //
+    ///////////////////////////
+    var filterTypes = []; // Keep track of filter selections
+    
+    function filtersSelected(button) {
+        
+        if (lastDown == button)
+            return;
+        
+        // Button gui
+        buttonSelected(button);
+        
+        // Remove previous menu
+        $("#options").empty();
+
+        // Append div for filter buttons
+        var newDiv = $('<div id="filterButtons" class="col-lg-6 col-sm-12 centerText" style="float:left"><div class="jumbotron" style="width:70%;margin-left:auto;margin-right:auto;"><h2><center>Type</center></h2><p><center>Click on the buttons to filter crime data by primary type!</center></p></div><input type="button" onClick="filterReset(this)" id="resetFilters" class="btn btn-primary filterButton" value="Reset"/><br><br></div>');
+        $("#options").append(newDiv);
+        
+        // Append button options
+        for (var i = 0; i < crimeTypes.length; i++) {
+            var newButton = $('<input type="button" onClick="filterSelected(this)" id="' + crimeTypes[i] + '" class="btn btn-info filterButton" value="' + i + '. ' + crimeTypes[i] + '"/><br>');
+            $("#filterButtons").append(newButton);
+        }
+        var newln = $('<br>');
+        $("#filterButtons").append(newln);
+        
+        // Append div for filter forms
+        var newDiv = $('<div id="filterForms" class="col-lg-6 col-sm-12 centerText" style="float:left"></div>');
+        $("#options").append(newDiv);
+        
+        // Append div for time selections
+        newDiv = $('<div id="timeSelections" class="centerText" style="width:100%;height:50%;float:left"><div class="jumbotron" style="width:70%;margin-left:auto;margin-right:auto;"><h2><center>Time Frame</center></h2></div></div>');
+        $("#filterForms").append(newDiv);
+        
+        // Append submition boxes for time and date
+        newDiv = $('<form role="form" class="form-inline" id="hours"><div class="form-group"><label for="firstHour">Time: From:</label><input type="text" class="form-control" id="firstHour"></div><div class="form-group"><label for="secondHour">Until:</label><input type="text" class="form-control" id="secondHour" value="10:30PM"></div></form><br>');
+        $("#timeSelections").append(newDiv);
+        newDiv = $('<form role="form" class="form-inline" id="dates"><div class="form-group"><label for="firstDate">Date: From:</label><input type="text" class="form-control" id="firstDate"></div><div class="form-group"><label for="secondDate">Until:</label><input type="text" class="form-control" id="secondDate"></div></form><br>');
+        $("#timeSelections").append(newDiv);
+        var newButton = $('<input type="button" id="resetTimeFrame" class="btn btn-primary timeFrameButton" value="Reset"/>');
+        $("#timeSelections").append(newButton);
+        newButton = $('<input type="button" id="submitTimeFrame" onClick="timeFrameSelected()" class="btn btn-primary timeFrameButton" value="Submit"/><br><br>');
+        $("#timeSelections").append(newButton);
+        
+        // Append div for location selections
+        newDiv = $('<div id="locationSelections" class="centerText" style="width:100%;height:50%;float:left"><div class="jumbotron" style="width:70%;margin-left:auto;margin-right:auto;"><h2><center>Location</center></h2></div></div>');
+        $("#filterForms").append(newDiv);
+        
+        // Append submition box for radius
+        newDiv = $('<form id="distance">Select a radius distance display more specific crime data based on location<br><br>Distance: <input type="text" name="radius" value="5.00"> miles<br><br>Press the "Pick Location" button and drag the red marker to select the center</form><br>');
+        $("#locationSelections").append(newDiv);
+        newButton = $('<input type="button" id="resetLocation" class="btn btn-primary locationButton" value="Reset"/>');
+        $("#locationSelections").append(newButton);
+        newButton = $('<input type="button" id="submitLocation" class="btn btn-primary locationButton" value="Pick Location"/><br><br>');
+        $("#locationSelections").append(newButton);
+    }
+    
+    ///////////////////////////
+    // Filter button clicked //
+    ///////////////////////////
+    function filterSelected(button) {
+        
+        // Change button background
+        $(button).toggleClass("active");
+        
+        // Check if "un-selecting" filter
+        var index;
+        if ((index = filterTypes.indexOf(button.id)) != -1) {
+            filterTypes.splice(index, 1);
+        }
+        else
+            filterTypes.push(button.id);
+        
+        for (var i = 0; i < markers.length; i++) {
+            if (filterTypes.indexOf(markers[i].crimeData.primary_type) == -1)
+                markers[i].setVisible(false);
+            else
+                markers[i].setVisible(true);
+        }
+    }
+    
+    //////////////////////////
+    // Filter reset clicked //
+    //////////////////////////
+    function filterReset() {
+        filterTypes = [];
+        
+        for (var i = 0; i < markers.length; i++) {
+            markers[i].setVisible(true);
+        }
+    }
+    
+    ///////////////////////////////
+    // Time frame submit clicked //
+    ///////////////////////////////
+    function timeFrameSelected() {
+        
+        // Get proper input: Fuck wit some RegExp's
+        var hourRegExp = /[0-1]?[0-9][:][0-5][0-9][AP][M]/;
+        var dateRegExp = /[01]?[0-9][/][0-3]?[0-9][/][0-2][0-9][0-9][0-9]/;
+        var hour1 = document.getElementById('firstHour').value;
+        var hour2 = document.getElementById('secondHour').value;
+        if ((matchExact(hour1, hourRegExp) != true) || (matchExact(hour2, hourRegExp) != true))
+            alert("Please type time in the following form: HH:MM followed by AM or PM like so; 7:30PM, 12:59AM, 08:15PM");
+        var date1 = document.getElementById('firstDate').value;
+        var date2 = document.getElementById('secondDate').value;
+        if ((matchExact(date1, dateRegExp) != true) || (matchExact(date2, dateRegExp) != true))
+            alert("Please type date in the following form: MM/DD/YYYY like so; 12/31/2015, 3/2/2001, 08/15/1993");
+        
+        console.log(markers[0].crimeData.date);
+        console.log(date1.concat(hour1));
+        
+        
+    }
+    
+    ///////////////////
+    // RegExp helper //
+    ///////////////////
+    function matchExact(str,  r) {
+        var match = str.match(r);
+        return match != null && str == match[0];
+    }
+    
+    //////////////////////
+    // Open routes menu //
+    //////////////////////
+    function routesSelected(button) {
+        
+        if (lastDown == button)
+            return;
+        
+        // Button gui
+        buttonSelected(button);
+        
+        // Remove previous menu
+        $("#options").empty();
+    }
+    
+    //////////
+    // Logs //
+    //////////
+    console.log(crimeTypes);
+    console.log(markers);
+    
+</script>
+
+</head>
+
+<body>
+<div class="container-fluid" style="background-color:#222">
+    <div id="headerText" class="jumbotron" style="width:80%;margin-left:auto;margin-right:auto;">
+        <h1><center>ChiCrime v0.1</center></h1>
+        <p><center>Press the "filters" button to get started!!</center></p>
+    </div>
+    <div id="googleMap" style="height:500px;width:70%;margin-left:auto;margin-right:auto;" ></div> <!-- class="center col-lg-12 col-sm-12" style="height:500px;"-->
+    <div id="menu" class="center">
+        <div id="buttons" class="centerText">
+            <button id="filters" onclick="filtersSelected(this)" class="btn btn-info btn-lg">filters</button>
+            <button id="routes" onclick="routesSelected(this)" class="btn btn-info btn-lg">routes</button>
+            <button id="tweets" onclick="buttonSelected(this)" class="btn btn-info btn-lg">tweets</button>
+        </div>
+    </div>
+    <div id="interface" class="center">
+        <div id="options">
+            <!--jQuery dynamically generates interfaces here-->
+        </div>
+    </div>
+</div>
+</body>
+
+</html>
+
+<style>
+    
+    #buttons {
+        padding-top: 40px;
+        padding-bottom: 40px;
+    }
+    
+    html {
+      margin: auto auto;
+      background: #222;
+      position: relative;
+    }
+    
+    .centerText {
+        text-align: center;
+    }
+    
+    hr {
+        width: 90%
+    }
+    
+    .filterButton {
+        cursor: pointer;
+        height: 10%;
+        width: 45%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .timeFrameButton {
+        cursor: pointer;
+        height: 10%;
+        width: 20%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .locationButton {
+        cursor: pointer;
+        height: 10%;
+        width: 20%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .center {
+        margin-left: auto;
+        margin-right: auto;
+        width: 100%;
+        background-color: #222;
+    }
+    
+    form {
+        margin-left: auto;
+        margin-right: auto;
+        color: #fff;
+        font-size: 1.2em;
+    }
+    
+    h2 {
+        margin-left: auto;
+        margin-right: auto;
+        color: #444;
+        font-size: 1.5em;
+    }
+    
+    h1 {
+        margin-left: auto;
+        margin-right: auto;
+        color: #fff;
+        font-size: 3em;
+    }
+    
+</style>
