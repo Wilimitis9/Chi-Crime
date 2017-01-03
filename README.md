@@ -2,4 +2,8 @@
 Chicago crime data front-end visualization solution
 
 Stack:
-- Socrata Chicago Crime Data API
+- Socrata Chicago Crime Data API: https://dev.socrata.com/foundry/data.cityofchicago.org/6zsd-86xi
+- jQuery: https://jquery.com/
+- Google Maps JavaScript API: https://developers.google.com/maps/documentation/javascript/
+- Font Awesome: http://fontawesome.io/
+- Free Icon Maker: (current) https://iconsflow.com/
